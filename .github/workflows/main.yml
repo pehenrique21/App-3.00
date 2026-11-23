@@ -9,7 +9,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Abrir o projeto
-        run: unzip -q YarisDash.zip
+        run: |
+          ls
+          if ls *.zip >/dev/null 2>&1; then unzip -q -o "$(ls *.zip | head -n 1)"; fi
+          if [ -f settings.gradle.kts ]; then echo "PROJ=." >> $GITHUB_ENV; else echo "PROJ=YarisDash" >> $GITHUB_ENV; fi
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -21,9 +24,9 @@ jobs:
       - name: Criar chave de assinatura
         run: keytool -genkeypair -keystore $HOME/ci.jks -alias key -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=YarisDash"
       - name: Compilar APK otimizado
-        working-directory: YarisDash
+        working-directory: ${{ env.PROJ }}
         run: gradle assembleRelease --no-daemon
       - uses: actions/upload-artifact@v4
         with:
           name: YarisDash-apk
-          path: YarisDash/app/build/outputs/apk/release/*.apk
+          path: ${{ env.PROJ }}/app/build/outputs/apk/release/*.apk
